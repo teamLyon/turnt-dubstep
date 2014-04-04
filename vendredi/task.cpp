@@ -46,7 +46,6 @@ solve() {
 int
 main() {
   read_input();
-  print_img(I);
 
   solve();
 
