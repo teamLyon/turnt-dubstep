@@ -146,7 +146,7 @@ prune_path(int car, int v, int t, int k, Path& p, Path& best_p) {
     
     p.push_back(make_pair(next_v, edge_ind));
     //    if (simple_path(p)) {
-      prune_path(car, next_v, t - E[edge_ind].C, k-1, p, best_p);
+    prune_path(car, next_v, t - E[edge_ind].C, k-1, p, best_p);
       //    }
     p.pop_back();
   }
@@ -370,7 +370,7 @@ main(int argc, char *argv[]) {
   } else if (argc == 2) {
     srand(atoi(argv[1]));
     rep(j, C) {
-      // Start.push_back(S);
+      Start.push_back(S);
       // Start.push_back(rand() % N);
     }
     
