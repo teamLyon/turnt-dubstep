@@ -5,9 +5,11 @@
 #include <ctime>
 #include <set>
 #include <queue>
+#include <cmath>
 
 using namespace std;
 
+typedef pair<double, double> couple;
 #define rep(i, n) for (int i = 0; i < n; ++i) 
 
 struct Vertex {
@@ -247,8 +249,17 @@ main(int argc, char *argv[]) {
 
   // srand ?
   // Send to random 8 start points
-  rep(i, 8) {
-    Start.push_back(rand() % N);
+  Start.push_back(3709);
+  Start.push_back(10066);
+  Start.push_back(6839);
+  Start.push_back(11278);
+  Start.push_back(9404);
+  Start.push_back(5086);
+  Start.push_back(6036);
+  Start.push_back(9731);
+
+  rep(i, C) {
+    cerr << "(" << Start[i] << ")" << endl;
   }
 
   if (argc == 3) {
