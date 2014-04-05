@@ -31,6 +31,7 @@ struct Edge {
   }
 };
 
+const int MIN_K = 12;
 const int MAX_K = 15;
 
 int N, M, T, C, S;
@@ -154,7 +155,8 @@ traverse(int _s, int car, vector< pair<int, int> >& solution, int _t) {
 
   for (;;) {
     Path p, pp;
-    prune_path(car, pos, t, MAX_K, pp, p);
+    int d = MIN_K + (rand() % (MAX_K - MIN_K + 1));
+    prune_path(car, pos, t, d, pp, p);
     if (p.size() == 0) {
       break;
     }
