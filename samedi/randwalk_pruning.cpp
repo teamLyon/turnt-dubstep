@@ -31,8 +31,8 @@ struct Edge {
   }
 };
 
-const int MIN_K = 12;
-const int MAX_K = 15;
+const int MIN_K = 18;
+const int MAX_K = 18;
 
 int N, M, T, C, S;
 vector< vector<int> > Adj;
@@ -147,39 +147,6 @@ prune_path(int car, int v, int t, int k, Path& p, Path& best_p) {
   }
 }
 
-inline void
-traverse(int _s, int car, vector< pair<int, int> >& solution, int _t) {
-  int pos = _s;
-  int t = _t;
-  //  int next_edge = -1;
-
-  for (;;) {
-    Path p, pp;
-    int d = MIN_K + (rand() % (MAX_K - MIN_K + 1));
-    prune_path(car, pos, t, d, pp, p);
-    if (p.size() == 0) {
-      break;
-    }
-    
-    //    cerr << "chose_edge: " << chose_edge(car, pos, t) << " prune: " << p[0].second << endl;
-
-    for (int i = 0; i < p.size(); ++i) {
-      E[p[i].second].traversed = true;
-      t -= E[p[i].second].C;
-      solution.push_back(p[i]);
-    }
-
-    pos = p[p.size()-1].first;
-  }
-
-  // while ((next_edge = chose_edge(car, pos, t)) != -1) {
-  //   E[next_edge].traversed = true;
-  //   t -= E[next_edge].C;
-  //   pos = endpoint(pos, next_edge);
-  //   solution.push_back(make_pair(pos, next_edge));
-  // }
-}
-
 struct Node {
   int v;
   int d;
@@ -245,12 +212,40 @@ inline void
 solve() {
   Solution.resize(C);
 
+  vector<int> times(C, T);
+  vector<int> pos = Start;
+
   prev.resize(N);
   dijkstra(S);
 
   rep(i, C) {
-    int t = dispatch(i, Start[i]);
-    traverse(Start[i], i, Solution[i], T - t); 
+    times[i] -= dispatch(i, Start[i]);
+  }
+
+  for (;;) {
+    int cnt = 0;
+    rep(i, C) {
+      Path p, pp;
+      int d = MIN_K + (rand() % (MAX_K - MIN_K + 1));
+      prune_path(i, pos[i], times[i], d, pp, p);
+      if (p.size() == 0) {
+	continue;
+      }
+
+      cnt += p.size();
+
+      for (int j = 0; j < p.size(); ++j) {
+	E[p[j].second].traversed = true;
+	times[i] -= E[p[j].second].C;
+	Solution[i].push_back(p[j]);
+      }
+
+      pos[i] = p[p.size()-1].first;
+    }
+
+    if (cnt == 0) {
+      break;
+    }
   }
 }
 
@@ -333,7 +328,7 @@ main(int argc, char *argv[]) {
       srand(i);
       
       rep(j, C) {
-        Start.push_back(S);
+	Start.push_back(S);
         // Start.push_back(rand() % N);
       }
 
@@ -350,7 +345,7 @@ main(int argc, char *argv[]) {
     srand(atoi(argv[1]));
     rep(j, C) {
       Start.push_back(S);
-      //      Start.push_back(rand() % N);
+      // Start.push_back(rand() % N);
     }
     
     solve();
