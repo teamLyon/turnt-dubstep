@@ -269,10 +269,10 @@ solve() {
     traverse(Start[i+1], i+1, Solution[i+1], T-t);
   }
 
-  rep(i, C) {
-    int t = dispatch(i, Start[i]);
-    traverse(Start[i], i, Solution[i], T - t); 
-  }
+  // rep(i, C) {
+  //   int t = dispatch(i, Start[i]);
+  //   traverse(Start[i], i, Solution[i], T - t); 
+  // }
 }
 
 void
@@ -354,8 +354,8 @@ main(int argc, char *argv[]) {
       srand(i);
       
       rep(j, C) {
-        //        Start.push_back(S);
-        Start.push_back(rand() % N);
+        Start.push_back(S);
+        // Start.push_back(rand() % N);
       }
 
       solve();
@@ -371,7 +371,7 @@ main(int argc, char *argv[]) {
     srand(atoi(argv[1]));
     rep(j, C) {
       // Start.push_back(S);
-      Start.push_back(rand() % N);
+      // Start.push_back(rand() % N);
     }
     
     solve();
