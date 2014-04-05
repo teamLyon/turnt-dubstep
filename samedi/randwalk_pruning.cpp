@@ -31,6 +31,8 @@ struct Edge {
   }
 };
 
+const int MAX_K = 15;
+
 int N, M, T, C, S;
 vector< vector<int> > Adj;
 vector<Vertex> V;
@@ -106,8 +108,6 @@ score_path(const Path& p) {
 
   return (double)L / (double)C;
 }
-
-const int MAX_K = 10;
 
 inline bool
 simple_path(const Path& p) {
