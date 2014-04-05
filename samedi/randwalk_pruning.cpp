@@ -10,7 +10,12 @@
 using namespace std;
 
 typedef pair<double, double> couple;
+typedef vector< pair<int, int> > Path;
+
 #define rep(i, n) for (int i = 0; i < n; ++i) 
+
+const int MIN_K = 22;
+const int MAX_K = 22;
 
 struct Vertex {
   int lat, lng;
@@ -31,8 +36,17 @@ struct Edge {
   }
 };
 
-const int MIN_K = 22;
-const int MAX_K = 22;
+struct Node {
+  int v;
+  int d;
+  int e;
+
+  bool operator < (const Node& other) const {
+    return (d > other.d); // TAS MAX
+  }
+
+  Node(int v = 0, int d = 0, int e = 0) : v(v), d(d), e(e) {}
+};
 
 int N, M, T, C, S;
 vector< vector<int> > Adj;
@@ -51,37 +65,6 @@ gain(int car, int e, int t) {
   return ((double)E[e].L / (double)E[e].C);
 }
 
-inline int 
-chose_edge(int car, int vertex, int t) {
-  double best_gain = -1.0;
-  int best_edge = -1;
-  rep(i, Adj[vertex].size()) {
-    int edge_ind = Adj[vertex][i];
-    double g = gain(car, edge_ind, t);
-    if (E[edge_ind].C > t) {
-      continue;
-    }
-    if (g > best_gain) {
-      best_gain = g;
-      best_edge = edge_ind;
-    }
-  }
-
-  // Si tout est deja traverse, on chose en random
-  if (best_gain == 0.0) {
-    vector<int> good_edges;
-    rep(i, Adj[vertex].size()) {
-      if (E[Adj[vertex][i]].C <= t) {
-        good_edges.push_back(Adj[vertex][i]);
-      }
-    }
-    int r = rand() % good_edges.size();
-    return good_edges[r];
-  }
-
-  return best_edge;
-}
-
 inline int
 endpoint(int v, int e) {
   if (E[e].A == v) {
@@ -94,7 +77,36 @@ endpoint(int v, int e) {
   }
 }
 
-typedef vector< pair<int, int> > Path;
+inline void
+dijkstra(int start_v) {
+  priority_queue<Node> Q;
+  vector<bool> traversed(N, false);
+
+  Q.push(Node(start_v, 0));
+
+  while (!Q.empty()) {
+    Node cur = Q.top();
+    Q.pop();
+
+    if (traversed[cur.v]) {
+      continue;
+    }
+    
+    traversed[cur.v] = true;
+
+    if (cur.v != start_v) {
+      prev[cur.v] = make_pair(endpoint(cur.v, cur.e), cur.e);
+    }
+
+    rep(i, Adj[cur.v].size()) {
+      int edge_ind = Adj[cur.v][i];
+      int next_v = endpoint(cur.v, edge_ind);
+      if (!traversed[next_v]) {
+        Q.push(Node(next_v, cur.d + E[edge_ind].C, edge_ind));
+      }
+    }
+  }
+}
 
 inline double 
 score_path(const Path& p) {
@@ -151,7 +163,6 @@ inline void
 traverse(int _s, int car, vector< pair<int, int> >& solution, int _t) {
   int pos = _s;
   int t = _t;
-  //  int next_edge = -1;
 
   for (;;) {
     Path p, pp;
@@ -160,8 +171,6 @@ traverse(int _s, int car, vector< pair<int, int> >& solution, int _t) {
     if (p.size() == 0) {
       break;
     }
-    
-    //    cerr << "chose_edge: " << chose_edge(car, pos, t) << " prune: " << p[0].second << endl;
 
     for (int i = 0; i < p.size(); ++i) {
       E[p[i].second].traversed = true;
@@ -170,56 +179,6 @@ traverse(int _s, int car, vector< pair<int, int> >& solution, int _t) {
     }
 
     pos = p[p.size()-1].first;
-  }
-
-  // while ((next_edge = chose_edge(car, pos, t)) != -1) {
-  //   E[next_edge].traversed = true;
-  //   t -= E[next_edge].C;
-  //   pos = endpoint(pos, next_edge);
-  //   solution.push_back(make_pair(pos, next_edge));
-  // }
-}
-
-struct Node {
-  int v;
-  int d;
-  int e;
-
-  bool operator < (const Node& other) const {
-    return (d > other.d); // TAS MAX
-  }
-
-  Node(int v = 0, int d = 0, int e = 0) : v(v), d(d), e(e) {}
-};
-
-inline void
-dijkstra(int start_v) {
-  priority_queue<Node> Q;
-  vector<bool> traversed(N, false);
-
-  Q.push(Node(start_v, 0));
-
-  while (!Q.empty()) {
-    Node cur = Q.top();
-    Q.pop();
-
-    if (traversed[cur.v]) {
-      continue;
-    }
-    
-    traversed[cur.v] = true;
-
-    if (cur.v != start_v) {
-      prev[cur.v] = make_pair(endpoint(cur.v, cur.e), cur.e);
-    }
-
-    rep(i, Adj[cur.v].size()) {
-      int edge_ind = Adj[cur.v][i];
-      int next_v = endpoint(cur.v, edge_ind);
-      if (!traversed[next_v]) {
-        Q.push(Node(next_v, cur.d + E[edge_ind].C, edge_ind));
-      }
-    }
   }
 }
 
