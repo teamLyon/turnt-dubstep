@@ -190,6 +190,13 @@ print_dyn_path(int end_vertex, int end_time) {
     pos = prev[t][pos].first;
     t -= prev[t][pos].second;
   }
+
+  p.push_back(pos);
+
+  cout << p.size() << endl;
+  rep(i, p.size()) {
+    cout << p[i] << endl;
+  }
 }
 
 int
@@ -212,6 +219,7 @@ solve_dyn() {
 
   cerr << "Dyn values computed." << endl;
 
+  cout << C << endl;
   rep(c, C) {
     int best_score = 0;
     int end_vertex = -1;
