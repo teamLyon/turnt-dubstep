@@ -99,7 +99,7 @@ traverse(int car, vector< pair<int, int> >& solution) {
   }
 }
 
-void
+inline void
 solve() {
   Solution.resize(C);  
   rep(i, C) {
@@ -172,23 +172,32 @@ score() {
 }
 
 int
-main() {
+main(int argc, char *argv[]) {
   read_input();
 
-  int best_score = 0;
+  if (argc == 3) {
+    int from = atoi(argv[1]);
+    int to = atoi(argv[2]);
 
-  rep (i, 1000000) {
-    srand(i);
-    solve();
-    int s = score();
-    if (s > best_score) {
-      cout << s << " (" << i << ")" << endl;
-      best_score = s;
+    int best_score = 0;
+
+    for (int i = from; i <= to; ++i) {
+      srand(i);
+      solve();
+      int s = score();
+      if (s > best_score) {
+        cout << s << " (" << i << ")" << endl;
+        best_score = s;
+      }
+      clear();
     }
-    clear();
+  } else if (argc == 2) {
+    srand(atoi(argv[1]));
+    solve();
+    print_output();
+  } else {
+    cerr << "Usage : one arg -> run, two args -> optim_seed" << endl;
   }
-
-  //  print_output();
 
   return 0;
 }
