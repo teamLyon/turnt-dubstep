@@ -330,10 +330,9 @@ main(int argc, char *argv[]) {
     for (int i = from; i <= to; ++i) {
       srand(i);
       
-      rep(j, C - 1) {
+      rep(j, C) {
         Start.push_back(rand() % N);
       }
-      Start.push_back(S);
 
       solve();
       int s = score();
@@ -346,10 +345,9 @@ main(int argc, char *argv[]) {
     }
   } else if (argc == 2) {
     srand(atoi(argv[1]));
-    rep(j, C-1) {
+    rep(j, C) {
       Start.push_back(rand() % N);
     }
-    Start.push_back(S);
     
     solve();
     print_output();
