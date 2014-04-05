@@ -55,7 +55,10 @@ chose_edge(int car, int vertex, int t) {
   rep(i, Adj[vertex].size()) {
     int edge_ind = Adj[vertex][i];
     double g = gain(car, edge_ind, t);
-    if (g > best_gain && E[edge_ind].C <= t) {
+    if (E[edge_ind].C > t) {
+      continue;
+    }
+    if (g > best_gain) {
       best_gain = g;
       best_edge = edge_ind;
     }
@@ -256,9 +259,10 @@ main(int argc, char *argv[]) {
     for (int i = from; i <= to; ++i) {
       srand(i);
       
-      rep(j, C) {
+      rep(j, C - 1) {
         Start.push_back(rand() % N);
       }
+      Start.push_back(S);
 
       solve();
       int s = score();
@@ -271,9 +275,10 @@ main(int argc, char *argv[]) {
     }
   } else if (argc == 2) {
     srand(atoi(argv[1]));
-    rep(j, C) {
+    rep(j, C-1) {
       Start.push_back(rand() % N);
     }
+    Start.push_back(S);
     
     solve();
     print_output();
