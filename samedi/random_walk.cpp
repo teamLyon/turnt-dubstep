@@ -4,6 +4,7 @@
 #include <cstdlib>
 #include <ctime>
 #include <set>
+#include <queue>
 
 using namespace std;
 
@@ -33,6 +34,8 @@ vector< vector<int> > Adj;
 vector<Vertex> V;
 vector<Edge> E;
 vector< vector< pair<int, int> > > Solution;
+vector<int> Start;
+vector< pair<int, int> > prev;
 
 inline double 
 gain(int car, int e, int t) {
@@ -75,7 +78,7 @@ inline int
 endpoint(int v, int e) {
   if (E[e].A == v) {
     return E[e].B;
-  } else if (E[e].B == v && !E[e].oneway()) {
+  } else if (E[e].B == v) {// && !E[e].oneway()) {
     return E[e].A;
   } else {
     cerr << "ATTENTION endpoint()" << endl;
@@ -84,12 +87,12 @@ endpoint(int v, int e) {
 }
 
 inline void
-traverse(int car, vector< pair<int, int> >& solution) {
-  int pos = S;
-  int t = T;
+traverse(int _s, int car, vector< pair<int, int> >& solution, int _t) {
+  int pos = _s;
+  int t = _t;
   int next_edge = -1;
 
-  solution.push_back(make_pair(S, -1));
+  //  solution.push_back(make_pair(pos, _e));
 
   while ((next_edge = chose_edge(car, pos, t)) != -1) {
     E[next_edge].traversed = true;
@@ -99,11 +102,77 @@ traverse(int car, vector< pair<int, int> >& solution) {
   }
 }
 
+struct Node {
+  int v;
+  int d;
+  int e;
+
+  bool operator < (const Node& other) const {
+    return (d > other.d); // TAS MAX
+  }
+
+  Node(int v = 0, int d = 0, int e = 0) : v(v), d(d), e(e) {}
+};
+
+inline void
+dijkstra(int start_v) {
+  priority_queue<Node> Q;
+  vector<bool> traversed(N, false);
+
+  Q.push(Node(start_v, 0));
+
+  while (!Q.empty()) {
+    Node cur = Q.top();
+    Q.pop();
+
+    if (traversed[cur.v]) {
+      continue;
+    }
+    
+    traversed[cur.v] = true;
+
+    if (cur.v != start_v) {
+      prev[cur.v] = make_pair(endpoint(cur.v, cur.e), cur.e);
+    }
+
+    rep(i, Adj[cur.v].size()) {
+      int edge_ind = Adj[cur.v][i];
+      int next_v = endpoint(cur.v, edge_ind);
+      if (!traversed[next_v]) {
+        Q.push(Node(next_v, cur.d + E[edge_ind].C, edge_ind));
+      }
+    }
+  }
+}
+
+inline int
+dispatch(int car, int v) {
+  int pos = v;
+  int time = 0;
+  while (pos != S) {
+    Solution[car].push_back(make_pair(pos, prev[pos].second));
+    time += E[prev[pos].second].C;
+    E[prev[pos].second].traversed = true;
+    pos = prev[pos].first;
+  }
+
+  Solution[car].push_back(make_pair(S, 0));
+
+  reverse(Solution[car].begin(), Solution[car].end());
+
+  return time;
+}
+
 inline void
 solve() {
-  Solution.resize(C);  
+  Solution.resize(C);
+
+  prev.resize(N);
+  dijkstra(S);
+
   rep(i, C) {
-    traverse(i, Solution[i]); 
+    int t = dispatch(i, Start[i]);
+    traverse(Start[i], i, Solution[i], T - t); 
   }
 }
 
@@ -145,6 +214,7 @@ print_output() {
 
 inline void
 clear() {
+  prev.clear();
   rep (i, C) {
     Solution[i].clear();
   }
@@ -174,6 +244,12 @@ score() {
 int
 main(int argc, char *argv[]) {
   read_input();
+
+  // srand ?
+  // Send to random 8 start points
+  rep(i, 8) {
+    Start.push_back(rand() % N);
+  }
 
   if (argc == 3) {
     int from = atoi(argv[1]);
