@@ -215,13 +215,13 @@ score() {
 }
 
 double dist(double lat,double lng,int i) {
-    double norme = sqrt(( lat- V[i].lat)*( lat- V[i].lat) + ( lng- V[i].lng)*( lng- V[i].lng));
+    return  sqrt(( lat- V[i].lat)*( lat- V[i].lat) + ( lng- V[i].lng)*( lng- V[i].lng));
 }
 
 int closest_point (double lat, double lng)
 {
   int point = 0;
-  double dist_temp = 0.0;
+  double dist_temp;
   double dist_min = dist(lat,lng,point);
   rep(i,V.size()) {
     dist_temp = dist(lat,lng,i); 
@@ -235,7 +235,7 @@ int closest_point (double lat, double lng)
 }
 
 double epsilon(){
-  double res = ((double) rand() / (double) RAND_MAX) / (double) 10.0;
+  double res = ((double) rand() / (double) RAND_MAX) / (double) 20.0;
   return res;
 }
 
@@ -260,8 +260,8 @@ vector<int> findpoints()
   t.push_back(couple(0.8,0.2));
   vector<int> points;
   rep(i,8){
-    double lat = lat_min + (t[i].first + epsilon()) * (lat_max - lat_min);
-    double lng = lng_min + (t[i].second + epsilon()) * (lng_max - lng_min);
+    double lat = lat_min + (t[i].first+ epsilon() ) * (lat_max - lat_min);
+    double lng = lng_min + (t[i].second+epsilon()) * (lng_max - lng_min);
     points.push_back(closest_point(lat,lng));
   }
   return points;
@@ -270,7 +270,10 @@ vector<int> findpoints()
 int
 main(int argc, char *argv[]) {
   read_input();
-  findpoints();
-
+  vector <int> points = findpoints();
+  for(int i=0;i<8;i++)
+    {
+      cout << points[i] << " " << " lat " <<V[ points[i]].lat << " long  " <<V[ points[i]].lng << endl;
+    }
   return 0;
 }
