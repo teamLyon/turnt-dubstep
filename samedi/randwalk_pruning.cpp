@@ -32,7 +32,7 @@ struct Edge {
 };
 
 const int MIN_K = 12;
-const int MAX_K = 15;
+const int MAX_K = 12;
 
 int N, M, T, C, S;
 vector< vector<int> > Adj;
@@ -101,10 +101,15 @@ score_path(const Path& p) {
   if (p.size() == 0) {
     return 0.0;
   }
+
+  set<int> S;
   int C = 0, L = 0;
   rep(i, p.size()) {
     C += E[p[i].second].C;
-    L += (E[p[i].second].traversed) ? 0 : E[p[i].second].L;
+    if (S.find(p[i].second) != S.end()) {
+      L += (E[p[i].second].traversed) ? 0 : E[p[i].second].L;
+    }
+    S.insert(p[i].second);
   }
 
   return (double)L / (double)C;
@@ -140,9 +145,9 @@ prune_path(int car, int v, int t, int k, Path& p, Path& best_p) {
     }
     
     p.push_back(make_pair(next_v, edge_ind));
-    if (simple_path(p)) {
+    //    if (simple_path(p)) {
       prune_path(car, next_v, t - E[edge_ind].C, k-1, p, best_p);
-    }
+      //    }
     p.pop_back();
   }
 }
@@ -241,12 +246,28 @@ dispatch(int car, int v) {
   return time;
 }
 
+inline int
+compute_start() {
+  // vector<int> good;
+  
+
+  // return good[rand() % good.size()];
+  return S;
+}
+
 inline void
 solve() {
   Solution.resize(C);
 
   prev.resize(N);
   dijkstra(S);
+
+  traverse(S, 0, Solution[0], T);
+  rep(i, C-1) {
+    Start[i+1] = compute_start();
+    int t = dispatch(i+1, Start[i+1]);
+    traverse(Start[i+1], i+1, Solution[i+1], T-t);
+  }
 
   rep(i, C) {
     int t = dispatch(i, Start[i]);
@@ -333,8 +354,8 @@ main(int argc, char *argv[]) {
       srand(i);
       
       rep(j, C) {
-        Start.push_back(S);
-        // Start.push_back(rand() % N);
+        //        Start.push_back(S);
+        Start.push_back(rand() % N);
       }
 
       solve();
@@ -349,8 +370,8 @@ main(int argc, char *argv[]) {
   } else if (argc == 2) {
     srand(atoi(argv[1]));
     rep(j, C) {
-      Start.push_back(S);
-      //      Start.push_back(rand() % N);
+      // Start.push_back(S);
+      Start.push_back(rand() % N);
     }
     
     solve();
