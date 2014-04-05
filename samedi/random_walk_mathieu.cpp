@@ -31,8 +31,8 @@ struct Edge {
   }
 };
 
-const int MIN_K = 22;
-const int MAX_K = 22;
+const int MIN_K = 20;
+const int MAX_K = 20;
 
 int N, M, T, C, S;
 vector< vector<int> > Adj;
@@ -241,6 +241,21 @@ dispatch(int car, int v) {
   return time;
 }
 
+int good_edge() {
+ int indice = 0;  
+rep(i,E.size()){
+   
+    double g = -1.0;
+    if (gain(7,i,T) > g){
+      g = gain(7,i,T);
+      indice = i;
+    }
+
+  }
+  return indice;
+}
+
+
 inline void
 solve() {
   Solution.resize(C);
@@ -249,6 +264,8 @@ solve() {
   dijkstra(S);
 
   rep(i, C) {
+    if (C==7)
+      Start[7] = good_edge();
     int t = dispatch(i, Start[i]);
     traverse(Start[i], i, Solution[i], T - t); 
   }
@@ -282,12 +299,13 @@ read_input() {
 void
 print_output() {
   cout << C << endl;
-  rep(i, C) {
+  rep(i, C-1) {
     cout << Solution[i].size() << endl;
     rep(j, Solution[i].size()) {
       cout << Solution[i][j].first << endl;
     }
   }
+  cout << "1" << endl << S << endl;
 }
 
 inline void
@@ -333,8 +351,7 @@ main(int argc, char *argv[]) {
       srand(i);
       
       rep(j, C) {
-        Start.push_back(S);
-        // Start.push_back(rand() % N);
+        Start.push_back(rand() % N);
       }
 
       solve();
@@ -349,8 +366,7 @@ main(int argc, char *argv[]) {
   } else if (argc == 2) {
     srand(atoi(argv[1]));
     rep(j, C) {
-      Start.push_back(S);
-      //      Start.push_back(rand() % N);
+      Start.push_back(rand() % N);
     }
     
     solve();
