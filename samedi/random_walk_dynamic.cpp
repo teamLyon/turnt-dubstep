@@ -194,6 +194,7 @@ print_dyn_path(int end_vertex, int end_time) {
 
 int
 solve_dyn() {
+  cerr << "Computing dyn values." << endl;
   rep(t, T + 1) {
     rep(v, N) {
       rep(i, Adj[v].size()) {
@@ -208,6 +209,8 @@ solve_dyn() {
       }
     }
   }
+
+  cerr << "Dyn values computed." << endl;
 
   rep(c, C) {
     int best_score = 0;
