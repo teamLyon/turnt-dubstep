@@ -333,7 +333,8 @@ main(int argc, char *argv[]) {
       srand(i);
       
       rep(j, C) {
-        Start.push_back(rand() % N);
+        Start.push_back(S);
+        // Start.push_back(rand() % N);
       }
 
       solve();
@@ -348,7 +349,8 @@ main(int argc, char *argv[]) {
   } else if (argc == 2) {
     srand(atoi(argv[1]));
     rep(j, C) {
-      Start.push_back(rand() % N);
+      Start.push_back(S);
+      //      Start.push_back(rand() % N);
     }
     
     solve();
