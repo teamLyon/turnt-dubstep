@@ -37,8 +37,8 @@ vector< vector< pair<int, int> > > Solution;
 const int MAX_TIME = 54000;
 const int MAX_VERTICES = 11348;
 
-int dyn[MAX_TIME][MAX_VERTICES];
-pair<int, int> prev[MAX_TIME][MAX_VERTICES];
+int dyn[MAX_TIME+1][MAX_VERTICES];
+pair<int, int> prev[MAX_TIME+1][MAX_VERTICES];
 
 inline double 
 gain(int car, int e, int t) {
