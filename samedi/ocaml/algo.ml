@@ -84,7 +84,7 @@ let localSearch i depth tmax =
     | k ->   let ni = get_node i in
 	     let adj_out = ni.adj_out() in
 	     let bigger (x,(y,u,edges)) (z,(t,w,edges1)) = (y>t) in
-	     max_list bigger ([],(~-. 0.1,0.0,[])) (List.map (max_list bigger ([],(~-. 0.1,0.0,[]))) (List.map 
+	     max_list bigger ([],(~-. 1.0,0.0,[])) (List.map (max_list bigger ([],(~-. 1.0,0.0,[]))) (List.map (* ~-. 1.0 is to avoid the empty solution being chosen instead of a zero score solution *) 
 			      (fun j -> let c = get_cost i j and l = get_lengthDiff edges i j in [aux j (cost +. c) (score +. l) (i::best_path) ((i,j)::edges) (t -. c) (k-1)]) (strip i adj_out t edges)))
   in (aux i 0.0 0.0 [] [] tmax depth)
 ;;
