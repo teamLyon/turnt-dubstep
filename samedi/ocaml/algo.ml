@@ -81,7 +81,7 @@ let rec strip i adj_out t edges =
 
 let localSearch i depth tmax =
   let rec aux i cost score best_path edges t = function
-    | 0 -> (i::best_path,(score /. cost,t,edges))
+    | 0 -> (i::best_path,((score *. score) /. cost,t,edges))
     | k ->   let ni = get_node i in
 	     let adj_out = ni.adj_out() in
 	     let bigger (x,(y,u,edges)) (z,(t,w,edges1)) = (y>t) in
@@ -175,30 +175,82 @@ let show_visited_edges () = Hashtbl.iter (fun (i,j) e -> if visited.(e.ind) then
 (* List.nth  res.(0) 2049;; *)
 (* List.nth  res.(0) 2048;; *)
 
+(* Dijkstra to closest not visited edge *)
+let get_distance i j h = try Hashtbl.find h (i,j) with | Not_found -> infinity;;
+let get_previous i h = print_string "trying to get previous of "; print_int i; print_newline(); Hashtbl.find h i
 
-let main() =
-  let nargs = Array.length Sys.argv in
-  let suffix = ref "" in
-  let def_depth = 3 in
-  init();
-  let res = 
-    if nargs <> 3 then
-      begin
-	suffix := string_of_int def_depth;
-	parcours 100.0(* (float_of_int t0) *)
-	  (fun x -> def_depth) start
-      end
-    else
-      begin
-	let depth = ios Sys.argv.(1) in
-	max_rep := ios Sys.argv.(2);
-	let depthFun t = (* if t> 40000. then 10 else *) depth in
-	parcours (float_of_int t0) depthFun start
-      end
-  in
-  print_float (eval_sol()); print_newline();
-  writeSolToFile(Array.to_list res) ("output"^(!suffix));
-  res
-;;
+let rec min_list def f = function
+  | [] -> (def, f def)
+  | h::t -> if (f h)<(f def) then min_list h f t else min_list def f t;;
 
-let res = main();;
+let remove x l = 
+  let rec aux res = function
+  | [] -> res
+  | h::t when h=x -> aux res t
+  | h::t -> aux (h::res) t in
+  List.rev (aux [] l);;
+
+let get_path h i x =
+  let rec aux path i x =
+    match get_previous x h with
+    | u when u=i -> i::path
+    | u -> aux (x::path) i u
+  in aux [] i x;;
+
+let dijkstra i tmax = 
+  let distances = Hashtbl.create 100 in
+  List.iter (fun j -> Hashtbl.add distances (i,j) (get_cost i j)) (get_adjo i);
+  let previous = Hashtbl.create 100 in
+  List.iter (fun j -> Hashtbl.add previous j i) (get_adjo i);
+  let adj_out = get_adjo i in
+  let rec aux = function
+    | [] -> failwith "in an impasse..."
+    | h::t -> let (x,distix) = min_list h (fun j -> get_distance i j distances) t in
+	      let newList = remove x (h::t) in
+	      let rec aux2 = function
+		| [] -> aux newList
+		| k::fin -> 
+		  let alt = distix +. get_cost x k in 
+		  print_string "alt: "; print_float alt; print_newline();
+		  if (get_distance i k distances) > alt then 
+		    begin
+		      Hashtbl.add distances (i,k) alt; 
+		      print_string "coucou";
+		      Hashtbl.add previous k x
+		    end;
+		      if (not(traversedEdge x k)) then
+			get_path previous i k
+		      else
+		    aux2 fin
+	      in aux2 (get_adjo x)
+  in aux adj_out;;
+
+(* dijkstra 4516 10.0;; *)
+
+		
+(* let main() = *)
+(*   let nargs = Array.length Sys.argv in *)
+(*   let suffix = ref "" in *)
+(*   let def_depth = 3 in *)
+(*   init(); *)
+(*   let res =  *)
+(*     if nargs <> 3 then *)
+(*       begin *)
+(* 	suffix := string_of_int def_depth; *)
+(* 	parcours 100.0(\* (float_of_int t0) *\) *)
+(* 	  (fun x -> def_depth) start *)
+(*       end *)
+(*     else *)
+(*       begin *)
+(* 	let depth = ios Sys.argv.(1) in *)
+(* 	max_rep := ios Sys.argv.(2); *)
+(* 	let depthFun t = (\* if t> 40000. then 10 else *\) depth in *)
+(* 	parcours (float_of_int t0) depthFun start *)
+(*       end *)
+(*   in *)
+(*   print_float (eval_sol()); print_newline(); *)
+(*   writeSolToFile(Array.to_list res) ("output"^(!suffix)); *)
+(*   res *)
+(* ;; *)
+
+(* let res = main();; *)
