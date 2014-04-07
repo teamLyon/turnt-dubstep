@@ -66,10 +66,10 @@ let countlist i j l =
     | [] -> res
     | (i1,j1)::t -> let temp = if ((i1=i && j1=j) || (i1=j && j1=i)) then 1 else 0 in aux (res+temp) t
   in let res = aux 0 l in
-     if res>= 2 then print_string "coucou!\n"; res
+     (* if res>= 2 then print_string "coucou!\n"; *) res
 ;;
 
-let max_rep = 1;;
+let max_rep = 2;;
 
 let rec strip i adj_out t edges = 
   let rec aux = function
