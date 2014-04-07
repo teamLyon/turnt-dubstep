@@ -27,7 +27,8 @@ struct Edge {
   int L;
   bool traversed;
 
-  Edge(int A = 0, int B = 0, int D = 0, int C = 0, int L = 0) : A(A), B(B), D(D), C(C), L(L), traversed(false) {}
+  Edge(int A = 0, int B = 0, int D = 0, int C = 0, int L = 0) 
+    : A(A), B(B), D(D), C(C), L(L), traversed(false) {}
   bool oneway() {
     return (D == 1);
   }
@@ -63,7 +64,7 @@ score_path(const Path& p) {
     int edge_ind = p[i].second;
     C += E[edge_ind].C;
     if (S.find(edge_ind) == S.end() && !E[edge_ind].traversed) {
-      L +=  E[edge_ind].L;
+      L += E[edge_ind].L;
       S.insert(edge_ind);
     }
   }
@@ -89,11 +90,14 @@ good_path(const Path& p) {
 inline void
 prune_path(int car, int v, int t, int k, Path& p, Path& best_p) {
   if (k == 0) {
-    if (score_path(p) > score_path(best_p) || best_p.size() == 0) {
+    if (score_path(p) > score_path(best_p) 
+        || best_p.size() == 0) {
       best_p = p;
-    }
+    } 
     return;
   }
+
+  random_shuffle(Adj[v].begin(), Adj[v].end());
 
   rep(i, Adj[v].size()) {
     int edge_ind = Adj[v][i];
@@ -123,8 +127,9 @@ traverse(int car) {
     }
 
     for (int i = 0; i < p.size(); ++i) {
-      E[p[i].second].traversed = true;
-      t -= E[p[i].second].C;
+      int edge_ind = p[i].second;
+      E[edge_ind].traversed = true;
+      t -= E[edge_ind].C;
       Solution[car].push_back(p[i]);
     }
 
@@ -196,6 +201,26 @@ score() {
   return res;
 }
 
+void 
+print_stats() {
+  int score = 0;
+  int missed_edges = 0;
+  int missed_edges_length = 0;
+  rep(i, M) {
+    if (E[i].traversed) {
+      score += E[i].L;
+    } else {
+      ++missed_edges;
+      missed_edges_length += E[i].L;
+    }
+  }
+
+  cerr << "Score: " << score << endl;
+  cerr << "Missed edges: " << missed_edges 
+       << "(" << missed_edges_length << "m)" << endl;
+  cerr << "Total length: " << (score + missed_edges_length) << endl;
+}
+
 int
 main(int argc, char *argv[]) {
   read_input();
@@ -204,7 +229,7 @@ main(int argc, char *argv[]) {
     Depth = atoi(argv[1]);
     solve();
     print_output();
-    cerr << "Score : " << score() << endl;
+    print_stats();
   } else {
     cerr << "Usage : ./a.out depth" << endl;
   }
