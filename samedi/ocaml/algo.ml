@@ -69,7 +69,7 @@ let countlist i j l = (* count the number of times the edge i j has been used in
      (* if res>= 2 then print_string "coucou!\n"; *) res
 ;;
 
-let max_rep t = if t > 40000. then  1 else if t > 10000. then 2 else 3;; (* maximum number of repetition of edges allowed in an exploration*)
+let max_rep t = (* if t > 40000. then  1 else if t > 10000. then 2 else 3;; *) 1;; (* maximum number of repetition of edges allowed in an exploration*)
 
 let rec strip i adj_out t edges = 
   let rec aux res = function
@@ -100,35 +100,50 @@ let rec replicate l = function
 
 let next_car car = (car + 1) mod 8;;
 
+let reverse_array t = 
+  let n = Array.length t in
+  let res = Array.make n (t.(0)) in
+  for i=0 to (n-1) do
+    res.(i) <- t.(n-i-1)
+  done; res;;
+
 let parcours tmax depth start = 
   print_string "End of processing input. Computing routes...\n";
-  let res = Array.make 8 [] in
+  let res = Array.make_matrix 8 5000 start in
+  let rankInRes = Array.make 8 0 in
   let curpos = Array.make 8 start in
   let ended = Array.make 8 false in
   let timeLeft = Array.make 8 tmax in
   let rec treat_car t i car =
-    (* if (int_of_float t) mod 100 <= 5 then print_string ("time_left: "^(string_of_float t)^"\n"); *)
-    (* print_string ("treating car "^(soi car)^" with remaining time "^(string_of_float t)^"\n"); *)
     let (stops, (_,tleft,edges)) = localSearch i depth t in
-    let rec aux2 accu = function
-      | h::t -> t@accu
+    let rec aux3  = function
+      | [] -> ()
+      | h::t -> res.(car).(rankInRes.(car)) <- h; rankInRes.(car) <- rankInRes.(car) + 1; aux3 t in
+    let aux2 = function
+      | h::t -> aux3 (List.rev t) (* forget the head because it is already counted *)
       | _ -> failwith "depth>=2 should avoid this"
-    (* | [h] -> accu *)
-    (* | h::t -> aux2 (h::accu) t *)
-    (* | _ -> failwith "depth>=2 should avoid this" *)
     in match stops with
-      | [] -> res.(car) <- curpos.(car)::(res.(car)); ended.(car) <- true
+      | [] -> (* res.(car) <- curpos.(car)::(res.(car));  *)ended.(car) <- true
       | intersection::sequel -> 
 	begin
 	  List.iter (fun (x,y) -> mark_visited x y) edges;
-	  res.(car) <- aux2 (res.(car)) stops; 
+	  aux2 stops; 
 	  curpos.(car) <- intersection; 
 	  timeLeft.(car) <- tleft; 
 	  let ncar = (next_car car) in treat_car (timeLeft.(ncar)) (curpos.(ncar)) ncar
 	end
   in
   treat_car tmax start 0;
-    Array.iteri (fun i x -> res.(i) <- List.rev(res.(i))) res; res
+  let res1 = Array.make 8 [] in
+  for i=0 to 7 do
+    let temp = ref [] in
+    for j=0 to (rankInRes.(i)-1) do
+      temp := (res.(i).(j)::!temp)
+    done;
+    res1.(i) <- List.rev(!temp);
+  done;
+res1
+(* Array.iteri (fun i x -> res.(i) <- reverse_array res.(i)) res; res *)
 ;;
 
 (* init();; *)
@@ -162,14 +177,26 @@ let show_visited_edges () = Hashtbl.iter (fun (i,j) e -> if visited.(e.ind) then
 
 let main() =
   let nargs = Array.length Sys.argv in
-  if nargs <> 2 then
-    failwith "you need exactly one argument, the depth"
-  else
-    let depth = ios Sys.argv.(1) in
-    init();
-    let depthFun t = if t> 40000. then 10 else depth in
-    let res = parcours (float_of_int t0) depthFun start in
-    print_float (eval_sol()); print_newline();
-    writeSolToFile(Array.to_list res) ("output"^(string_of_int depth));;
+  let suffix = ref "" in
+  let def_depth = 3 in
+  init();
+  let res = 
+    if nargs <> 2 then
+      begin
+	suffix := string_of_int def_depth;
+	parcours 100.0(* (float_of_int t0) *)
+	  (fun x -> def_depth) start
+      end
+    else
+      begin
+	let depth = ios Sys.argv.(1) in
+	let depthFun t = (* if t> 40000. then 10 else *) depth in
+	parcours (float_of_int t0) depthFun start
+      end
+  in
+  print_float (eval_sol()); print_newline();
+  writeSolToFile(Array.to_list res) ("output"^(!suffix));
+  res
+;;
 
-main();;
+let res = main();;
