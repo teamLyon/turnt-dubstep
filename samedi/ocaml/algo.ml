@@ -61,10 +61,20 @@ let rec print_list = function
 let get_lengthDiff edges i j =
   if ((traversedEdge i j) || List.mem (i,j) edges || List.mem (j,i) edges) then 0. else get_length i j;;
 
-let rec strip i adj_out t = 
+let countlist i j l = 
+  let rec aux res = function
+    | [] -> res
+    | (i1,j1)::t -> let temp = if ((i1=i && j1=j) || (i1=j && j1=i)) then 1 else 0 in aux (res+temp) t
+  in let res = aux 0 l in
+     if res>= 2 then print_string "coucou!\n"; res
+;;
+
+let max_rep = 1;;
+
+let rec strip i adj_out t edges = 
   let rec aux = function
     | [] -> []
-    | a::b -> if get_cost i a > t then aux b else a::(aux b)
+    | j::b -> if (get_cost i j >  t || (countlist i j edges >= max_rep)) then aux b else j::(aux b)
   in aux adj_out
 ;;
 
@@ -75,7 +85,7 @@ let localSearch i depth tmax =
 	     let adj_out = ni.adj_out() in
 	     let bigger (x,(y,u,edges)) (z,(t,w,edges1)) = (y>t) in
 	     max_list bigger ([],(~-. 0.1,0.0,[])) (List.map (max_list bigger ([],(~-. 0.1,0.0,[]))) (List.map 
-			      (fun j -> let c = get_cost i j and l = get_lengthDiff edges i j in [aux j (cost +. c) (score +. l) (i::best_path) ((i,j)::edges) (t -. c) (k-1)]) (strip i adj_out t)))
+			      (fun j -> let c = get_cost i j and l = get_lengthDiff edges i j in [aux j (cost +. c) (score +. l) (i::best_path) ((i,j)::edges) (t -. c) (k-1)]) (strip i adj_out t edges)))
   in (aux i 0.0 0.0 [] [] tmax depth)
 ;;
 
@@ -121,7 +131,6 @@ let parcours tmax depth start =
 
 (* init();; *)
 (* let res = parcours 10.0 2 start;; *)
-let res = parcours (float_of_int t0) 14 start;;
 
 (* init();; *)
 (* localSearch start 4 100.0;;	    *)
@@ -137,12 +146,29 @@ let print_edge i j = print_int i; print_string " -> "; print_int j; print_newlin
 let show_visited_edges () = Hashtbl.iter (fun (i,j) e -> if visited.(e.ind) then print_edge i j) hEdges;;
 (* show_visited_edges();; *)
 
-print_float (eval_sol()); print_newline();;
+(* print_float (eval_sol()); print_newline();; *)
 
-writeSolToFile(Array.to_list res) "output14";;
 
 (* List.length (res.(0));; *)
 (* List.nth  res.(0) 2051;; *)
 (* List.nth  res.(0) 2050;; *)
 (* List.nth  res.(0) 2049;; *)
 (* List.nth  res.(0) 2048;; *)
+
+
+let main() =
+  let nargs = Array.length Sys.argv in
+  if nargs <> 2 then
+    failwith "you need exactly one argument, the depth"
+  else
+    let depth = ios Sys.argv.(1) in
+    init();
+    let res = parcours (float_of_int t0) depth start in
+    print_float (eval_sol()); print_newline();
+    writeSolToFile(Array.to_list res) ("output"^(string_of_int depth));;
+
+(* for i = 0 to Array.length Sys.argv - 1 do *)
+  (*     printf "[%i] %s\n" i Sys.argv.(i) *)
+  (*   done;; *)
+
+main();;
