@@ -58,10 +58,10 @@ let rec print_list = function
   | [] -> print_string "end of printing list \n"
   | h::t -> print_int h; print_newline (); print_list t;;
 
-let get_lengthDiff edges i j =
+let get_lengthDiff edges i j = (* get the length of the path, counting only edges that have not been visited before or in the list of edges given as input*)
   if ((traversedEdge i j) || List.mem (i,j) edges || List.mem (j,i) edges) then 0. else get_length i j;;
 
-let countlist i j l = 
+let countlist i j l = (* count the number of times the edge i j has been used in the current exploration  *)
   let rec aux res = function
     | [] -> res
     | (i1,j1)::t -> let temp = if ((i1=i && j1=j) || (i1=j && j1=i)) then 1 else 0 in aux (res+temp) t
@@ -69,13 +69,13 @@ let countlist i j l =
      (* if res>= 2 then print_string "coucou!\n"; *) res
 ;;
 
-let max_rep = 2;;
+let max_rep t = if t > 40000. then  1 else if t > 10000. then 2 else 3;; (* maximum number of repetition of edges allowed in an exploration*)
 
 let rec strip i adj_out t edges = 
-  let rec aux = function
-    | [] -> []
-    | j::b -> if (get_cost i j >  t || (countlist i j edges >= max_rep)) then aux b else j::(aux b)
-  in aux adj_out
+  let rec aux res = function
+    | [] -> res
+    | j::b -> if (get_cost i j >  t || (countlist i j edges >= max_rep t)) then aux res b else (aux (j::res) b)
+  in aux [] adj_out
 ;;
 
 let localSearch i depth tmax =
@@ -86,7 +86,7 @@ let localSearch i depth tmax =
 	     let bigger (x,(y,u,edges)) (z,(t,w,edges1)) = (y>t) in
 	     max_list bigger ([],(~-. 1.0,0.0,[])) (List.map (max_list bigger ([],(~-. 1.0,0.0,[]))) (List.map (* ~-. 1.0 is to avoid the empty solution being chosen instead of a zero score solution *) 
 			      (fun j -> let c = get_cost i j and l = get_lengthDiff edges i j in [aux j (cost +. c) (score +. l) (i::best_path) ((i,j)::edges) (t -. c) (k-1)]) (strip i adj_out t edges)))
-  in (aux i 0.0 0.0 [] [] tmax depth)
+  in (aux i 0.0 0.0 [] [] tmax (depth tmax))
 ;;
 
 
@@ -101,11 +101,13 @@ let rec replicate l = function
 let next_car car = (car + 1) mod 8;;
 
 let parcours tmax depth start = 
+  print_string "End of processing input. Computing routes...\n";
   let res = Array.make 8 [] in
   let curpos = Array.make 8 start in
   let ended = Array.make 8 false in
   let timeLeft = Array.make 8 tmax in
   let rec treat_car t i car =
+    (* if (int_of_float t) mod 100 <= 5 then print_string ("time_left: "^(string_of_float t)^"\n"); *)
     (* print_string ("treating car "^(soi car)^" with remaining time "^(string_of_float t)^"\n"); *)
     let (stops, (_,tleft,edges)) = localSearch i depth t in
     let rec aux2 accu = function
@@ -165,7 +167,8 @@ let main() =
   else
     let depth = ios Sys.argv.(1) in
     init();
-    let res = parcours (float_of_int t0) depth start in
+    let depthFun t = if t> 40000. then 10 else depth in
+    let res = parcours (float_of_int t0) depthFun start in
     print_float (eval_sol()); print_newline();
     writeSolToFile(Array.to_list res) ("output"^(string_of_int depth));;
 
