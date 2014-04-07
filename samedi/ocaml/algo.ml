@@ -69,12 +69,13 @@ let countlist i j l = (* count the number of times the edge i j has been used in
      (* if res>= 2 then print_string "coucou!\n"; *) res
 ;;
 
-let max_rep t = (* if t > 40000. then  1 else if t > 10000. then 2 else 3;; *) 1;; (* maximum number of repetition of edges allowed in an exploration*)
+let max_rep = ref 1 (* if t > 40000. then  1 else if t > 10000. then 2 else 3;; *) (* maximum number of repetition of edges allowed in an exploration*)
+let max_repFun t = !max_rep;;
 
 let rec strip i adj_out t edges = 
   let rec aux res = function
     | [] -> res
-    | j::b -> if (get_cost i j >  t || (countlist i j edges >= max_rep t)) then aux res b else (aux (j::res) b)
+    | j::b -> if (get_cost i j >  t || (countlist i j edges >= max_repFun t)) then aux res b else (aux (j::res) b)
   in aux [] adj_out
 ;;
 
@@ -181,7 +182,7 @@ let main() =
   let def_depth = 3 in
   init();
   let res = 
-    if nargs <> 2 then
+    if nargs <> 3 then
       begin
 	suffix := string_of_int def_depth;
 	parcours 100.0(* (float_of_int t0) *)
@@ -190,6 +191,7 @@ let main() =
     else
       begin
 	let depth = ios Sys.argv.(1) in
+	max_rep := ios Sys.argv.(2);
 	let depthFun t = (* if t> 40000. then 10 else *) depth in
 	parcours (float_of_int t0) depthFun start
       end
