@@ -100,11 +100,12 @@ let parcours tmax depth start =
     let (stops, (_,tleft,edges)) = localSearch i depth t in
     let rec aux2 accu = function
       | h::t -> t@accu
+      | _ -> failwith "depth>=2 should avoid this"
     (* | [h] -> accu *)
     (* | h::t -> aux2 (h::accu) t *)
     (* | _ -> failwith "depth>=2 should avoid this" *)
     in match stops with
-      | [] -> ended.(car) <- true
+      | [] -> res.(car) <- curpos.(car)::(res.(car)); ended.(car) <- true
       | intersection::sequel -> 
 	begin
 	  List.iter (fun (x,y) -> mark_visited x y) edges;
@@ -118,16 +119,27 @@ let parcours tmax depth start =
     Array.iteri (fun i x -> res.(i) <- List.rev(res.(i))) res; res
 ;;
 
-
-(* let res = parcours 100.0 4 start;; *)
-let res = parcours (float_of_int t0) 10 start;;
+(* init();; *)
+(* let res = parcours 10.0 2 start;; *)
+let res = parcours (float_of_int t0) 14 start;;
 
 (* init();; *)
 (* localSearch start 4 100.0;;	    *)
 (* localSearch 397 4 100.0;; *)
 
+let eval_sol () =
+  let res = ref 0.0 in
+  Hashtbl.iter (fun (i,j) e -> if (visited.(e.ind) && ((not(e.bidir)) || i < j)) then res := !res +. e.length) hEdges;
+  !res;;
 
-writeSolToFile(Array.to_list res) "output";;
+let print_edge i j = print_int i; print_string " -> "; print_int j; print_newline();;
+
+let show_visited_edges () = Hashtbl.iter (fun (i,j) e -> if visited.(e.ind) then print_edge i j) hEdges;;
+(* show_visited_edges();; *)
+
+print_float (eval_sol()); print_newline();;
+
+writeSolToFile(Array.to_list res) "output14";;
 
 (* List.length (res.(0));; *)
 (* List.nth  res.(0) 2051;; *)
