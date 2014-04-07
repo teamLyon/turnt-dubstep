@@ -137,9 +137,11 @@ let parcours tmax depth start =
 (* localSearch 397 4 100.0;; *)
 
 let eval_sol () =
-  let res = ref 0.0 in
-  Hashtbl.iter (fun (i,j) e -> if (visited.(e.ind) && ((not(e.bidir)) || i < j)) then res := !res +. e.length) hEdges;
-  !res;;
+  Hashtbl.fold (fun (i,j) e res -> if (visited.(e.ind) && ((not(e.bidir)) || i < j)) then res +. e.length else res) hEdges 0.0;;
+
+
+(* let elapsed_time () = *)
+(*   Hashtbl.fold (fun (i,j) e res -> if (visited.(e.ind) && ((not(e.bidir)) || i < j)) then res +. get_cost i j else res) hEdges 0.0;; *)
 
 let print_edge i j = print_int i; print_string " -> "; print_int j; print_newline();;
 
@@ -166,9 +168,5 @@ let main() =
     let res = parcours (float_of_int t0) depth start in
     print_float (eval_sol()); print_newline();
     writeSolToFile(Array.to_list res) ("output"^(string_of_int depth));;
-
-(* for i = 0 to Array.length Sys.argv - 1 do *)
-  (*     printf "[%i] %s\n" i Sys.argv.(i) *)
-  (*   done;; *)
 
 main();;
