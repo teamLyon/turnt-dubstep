@@ -207,7 +207,7 @@ let show_visited_edges () = Hashtbl.iter (fun (i,j) e -> if visited.(e.ind) then
 
 (* Dijkstra to closest not visited edge *)
 let get_distance i j h = try Hashtbl.find h (i,j) with | Not_found -> infinity;;
-let get_previous i h = print_string "trying to get previous of "; print_int i; let res = Hashtbl.find h i in print_string ("... and it is "^(soi res)); print_newline(); res
+let get_previous i h = (* print_string "trying to get previous of "; print_int i;  *)let res = Hashtbl.find h i in (* print_string ("... and it is "^(soi res)); print_newline(); *) res
 
 let rec min_list def f = function
   | [] -> (def, f def)
@@ -230,7 +230,7 @@ let get_path h (i:int) x =
 let sof = string_of_float;;
 
 let dijkstra (i : int) (tmax : float) =
-  print_string ("starting Dijkstra's algorithm to find an unvisited edge from "^(soi i)^"\n");
+  (* print_string ("starting Dijkstra's algorithm to find an unvisited edge from "^(soi i)^"\n"); *)
   let distances = Hashtbl.create 100 in
   Hashtbl.add distances (i,i) 0.;
   (* List.iter (fun j -> Hashtbl.add distances (i,j) (get_cost i j)) (get_adjo i); *)
@@ -245,12 +245,12 @@ let dijkstra (i : int) (tmax : float) =
 		| [] -> aux future
 		| k::fin -> let alt = distix +. get_cost x k in
 			    let cur_dist = (get_distance i k distances) in
-			    print_string ("current distance from "^(soi i)^" to "^(soi k)^" is "^(sof cur_dist)^" and alt is "^(sof alt)^". tmax is "^(sof tmax)^"\n");
+			    (* print_string ("current distance from "^(soi i)^" to "^(soi k)^" is "^(sof cur_dist)^" and alt is "^(sof alt)^". tmax is "^(sof tmax)^"\n"); *)
 			    if cur_dist > alt && (alt < tmax) then
 			      begin
-				print_string ("the distance from "^(soi i)^" to "^(soi k)^" has  been improved\n");
+				(* print_string ("the distance from "^(soi i)^" to "^(soi k)^" has  been improved\n"); *)
 				Hashtbl.add distances (i,k) alt;
-				print_string ("the distance from "^(soi i)^" to "^(soi k)^" is now "^(sof (get_distance i k distances))^"\n");
+				(* print_string ("the distance from "^(soi i)^" to "^(soi k)^" is now "^(sof (get_distance i k distances))^"\n"); *)
 				Hashtbl.add previous k x;
 				if (not(traversedEdge x k)) then (* we're done: we have found an unvisited edge *) 
 				  get_path previous i k
@@ -259,7 +259,7 @@ let dijkstra (i : int) (tmax : float) =
 			      end
 			    else 
 			      begin
-				print_string ("the distance from "^(soi x)^" to "^(soi k)^" has not been improved\n");
+				(* print_string ("the distance from "^(soi x)^" to "^(soi k)^" has not been improved\n"); *)
 				aux2 future fin
 			      end
 	      in aux2 newList (get_adjo x)
@@ -270,7 +270,7 @@ let dijkstra i depth tmax =
   dijkstra i tmax;;
 
 
-dijkstra 4516 (-1) 200.0;;
+(* dijkstra 4516 (-1) 200.0;; *)
 
 
 		
@@ -282,12 +282,14 @@ let main() =
   let res =
     if nargs <> 4 then
       begin
+	print_string "not in terminal mode";
 	suffix := string_of_int def_depth;
 	parcours (float_of_int t0)
 	  (fun x -> def_depth) start localSearch
       end
     else
       begin
+	print_string "terminal mode";
 	let depth = ios Sys.argv.(1) in
 	suffix := string_of_int depth;
 	max_rep := ios Sys.argv.(2);
