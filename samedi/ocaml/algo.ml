@@ -102,13 +102,14 @@ let costEdges edges = List.fold_right (fun (a,b) y -> (get_cost a b) +. y) (edge
 let localSearchSmarter i depth tmax = 
   let (res,(score,tLeft,edges)) = localSearch i depth tmax in
   let newDepth = (depth tmax)/3 in
-  let newPath = cutList [] (List.rev res,newDepth) in
+  (* let newPath = cutList [] (List.rev res,newDepth) in *)
   let newEdges = cutList [] (List.rev edges,newDepth-1) in
+  let newPath = List.fold_right (fun (a,b) y -> (b::y)) newEdges [List.hd(List.rev(res))] in
   (newPath,(0.0,tmax -. costEdges newEdges,newEdges));;
 
-(* let (path,(score,tLeft,edges)) = localSearch 4516 (fun x -> 10) 1000.;; *)
-(* init();; *)
-(* localSearchSmarter 4516 (fun x -> 10) 1000.;; *)
+let (path,(score,tLeft,edges)) = localSearch 4516 (fun x -> 10) 1000.;;
+init();;
+localSearchSmarter 4516 (fun x -> 10) 1000.;;
 
 
 
