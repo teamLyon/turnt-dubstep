@@ -90,8 +90,27 @@ let localSearch i depth tmax =
   in (aux i 0.0 0.0 [] [] tmax (depth tmax))
 ;;
 
+let rec cutList res = function 
+    | (l,0) -> res
+    | (h::t,k) -> cutList (h::res) (t,k-1)
+    | ([],k) -> res;;
 
-localSearch 4516 (fun x -> 10) 1000.;;
+(* cutList [] ([1;2;3;4],2);; *)
+
+let costEdges edges = List.fold_right (fun (a,b) y -> (get_cost a b) +. y) (edges) 0.;;
+
+let localSearchSmarter i depth tmax = 
+  let (res,(score,tLeft,edges)) = localSearch i depth tmax in
+  let newDepth = (depth tmax)/3 in
+  let newPath = cutList [] (List.rev res,newDepth) in
+  let newEdges = cutList [] (List.rev edges,newDepth-1) in
+  (newPath,(0.0,tmax -. costEdges newEdges,newEdges));;
+
+(* let (path,(score,tLeft,edges)) = localSearch 4516 (fun x -> 10) 1000.;; *)
+(* init();; *)
+(* localSearchSmarter 4516 (fun x -> 10) 1000.;; *)
+
+
 
 let rec replicate l = function
   | 1 -> [l]
@@ -187,7 +206,7 @@ let show_visited_edges () = Hashtbl.iter (fun (i,j) e -> if visited.(e.ind) then
 
 (* Dijkstra to closest not visited edge *)
 let get_distance i j h = try Hashtbl.find h (i,j) with | Not_found -> infinity;;
-let get_previous i h = print_string "trying to get previous of "; print_int i; print_newline(); Hashtbl.find h i
+let get_previous i h = print_string "trying to get previous of "; print_int i; let res = Hashtbl.find h i in print_string ("... and it is "^(soi res)); print_newline(); res
 
 let rec min_list def f = function
   | [] -> (def, f def)
@@ -203,28 +222,34 @@ let remove x l =
 let get_path h (i:int) x =
   let rec aux path edges i x =
     match get_previous x h with
-    | u when u=i -> (i::path,(i,x)::edges)
+    | u when u=i -> (i::x::path,(i,x)::edges)
     | u -> aux (x::path) ((u,x)::edges) i u
   in aux [] [] i x;;
 
+let sof = string_of_float;;
 
 let dijkstra (i : int) (tmax : float) =
+  print_string ("starting Dijkstra's algorithm to find an unvisited edge from "^(soi i)^"\n");
   let distances = Hashtbl.create 100 in
+  Hashtbl.add distances (i,i) 0.;
   (* List.iter (fun j -> Hashtbl.add distances (i,j) (get_cost i j)) (get_adjo i); *)
   let previous = Hashtbl.create 100 in
   (* List.iter (fun j -> Hashtbl.add previous j i) (get_adjo i); *)
   (* let adj_out = get_adjo i in *)
   let rec aux = function
-    | [] -> failwith "in an impasse..."
+    | [] -> ([],[])
     | h::t -> let (x,distix) = min_list h (fun j -> get_distance i j distances) t in
 	      let newList = remove x (h::t) in
 	      let rec aux2 future = function
 		| [] -> aux future
 		| k::fin -> let alt = distix +. get_cost x k in
-			    if (get_distance i k distances) > alt && (alt < tmax) then
+			    let cur_dist = (get_distance i k distances) in
+			    print_string ("current distance from "^(soi i)^" to "^(soi k)^" is "^(sof cur_dist)^" and alt is "^(sof alt)^". tmax is "^(sof tmax)^"\n");
+			    if cur_dist > alt && (alt < tmax) then
 			      begin
-				print_string ("the distance from "^(soi x)^" to "^(soi k)^" has  been improved\n");
+				print_string ("the distance from "^(soi i)^" to "^(soi k)^" has  been improved\n");
 				Hashtbl.add distances (i,k) alt;
+				print_string ("the distance from "^(soi i)^" to "^(soi k)^" is now "^(sof (get_distance i k distances))^"\n");
 				Hashtbl.add previous k x;
 				if (not(traversedEdge x k)) then (* we're done: we have found an unvisited edge *) 
 				  get_path previous i k
@@ -238,13 +263,13 @@ let dijkstra (i : int) (tmax : float) =
 			      end
 	      in aux2 newList (get_adjo x)
   in let (path,edges) = aux [i]
-     in (path,(0.0,0.0,edges));;
+     in (List.rev path,(0.0,tmax -. (List.fold_right (fun (a,b) y -> get_cost a b +. y) edges 0.),edges));;
 
 let dijkstra i depth tmax =
   dijkstra i tmax;;
 
 
-(* dijkstra 4516 (-1) 20.0;; *)
+dijkstra 4516 (-1) 200.0;;
 
 
 		
@@ -263,9 +288,11 @@ let main() =
     else
       begin
 	let depth = ios Sys.argv.(1) in
+	suffix := string_of_int depth;
 	max_rep := ios Sys.argv.(2);
 	let dijk = bool_of_string (Sys.argv.(3)) in
-	let localSearch = if dijk then dijkstra else localSearch in
+	let localSearch start depth time = if time<3000. then dijkstra start depth time else localSearchSmarter start depth time in
+(* if dijk then dijkstra else localSearch in *)
 	let depthFun t = (* if t> 40000. then 10 else *) depth in
 	parcours (float_of_int t0) depthFun  start localSearch
       end
