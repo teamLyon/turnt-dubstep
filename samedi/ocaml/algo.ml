@@ -2,7 +2,7 @@ open Input;;
 open WriteSol;;
 
 let get_node i = Hashtbl.find hNodes i;;
-let get_edge i j = Hashtbl.find hEdges (i,j);;
+let get_edge i j = try Hashtbl.find hEdges (i,j) with Not_found -> failwith "there is no edge between these nodes!";;
 let get_cost i j = let e = get_edge i j in e.cost;;
 let get_length i j = let e = get_edge i j in e.length;;
 let get_adjo i = let ni = get_node i in ni.adj_out();;
@@ -91,6 +91,7 @@ let localSearch i depth tmax =
 ;;
 
 
+localSearch 4516 (fun x -> 10) 1000.;;
 
 let rec replicate l = function
   | 1 -> [l]
@@ -108,7 +109,14 @@ let reverse_array t =
     res.(i) <- t.(n-i-1)
   done; res;;
 
-let parcours tmax depth start = 
+let cutListAt k l = (* keeps only up to the first k elements of a list *)
+  let rec aux res = function
+  | (_,0) -> res
+  | (h::t,l) -> aux (h::res) (t,l-1)
+  | ([],_) -> []
+  in List.rev(aux []  (l,k));;
+
+let parcours tmax depth start localSearch  = 
   print_string "End of processing input. Computing routes...\n";
   let res = Array.make_matrix 8 5000 start in
   let rankInRes = Array.make 8 0 in
@@ -117,6 +125,8 @@ let parcours tmax depth start =
   let timeLeft = Array.make 8 tmax in
   let rec treat_car t i car =
     let (stops, (_,tleft,edges)) = localSearch i depth t in
+    (* let stops = List.rev (cutListAt ((depth t)/2) (List.rev stops)) in *)
+    (* let tleft = snd(List.fold_right (fun x (prevNode,res) -> (x,res +. get_cost prevNode x)) (List.tl stops) (List.hd stops,0.)) in *)
     let rec aux3  = function
       | [] -> ()
       | h::t -> res.(car).(rankInRes.(car)) <- h; rankInRes.(car) <- rankInRes.(car) + 1; aux3 t in
@@ -190,67 +200,79 @@ let remove x l =
   | h::t -> aux (h::res) t in
   List.rev (aux [] l);;
 
-let get_path h i x =
-  let rec aux path i x =
+let get_path h (i:int) x =
+  let rec aux path edges i x =
     match get_previous x h with
-    | u when u=i -> i::path
-    | u -> aux (x::path) i u
-  in aux [] i x;;
+    | u when u=i -> (i::path,(i,x)::edges)
+    | u -> aux (x::path) ((u,x)::edges) i u
+  in aux [] [] i x;;
 
-let dijkstra i tmax = 
+
+let dijkstra (i : int) (tmax : float) =
   let distances = Hashtbl.create 100 in
-  List.iter (fun j -> Hashtbl.add distances (i,j) (get_cost i j)) (get_adjo i);
+  (* List.iter (fun j -> Hashtbl.add distances (i,j) (get_cost i j)) (get_adjo i); *)
   let previous = Hashtbl.create 100 in
-  List.iter (fun j -> Hashtbl.add previous j i) (get_adjo i);
-  let adj_out = get_adjo i in
+  (* List.iter (fun j -> Hashtbl.add previous j i) (get_adjo i); *)
+  (* let adj_out = get_adjo i in *)
   let rec aux = function
     | [] -> failwith "in an impasse..."
     | h::t -> let (x,distix) = min_list h (fun j -> get_distance i j distances) t in
 	      let newList = remove x (h::t) in
-	      let rec aux2 = function
-		| [] -> aux newList
-		| k::fin -> 
-		  let alt = distix +. get_cost x k in 
-		  print_string "alt: "; print_float alt; print_newline();
-		  if (get_distance i k distances) > alt then 
-		    begin
-		      Hashtbl.add distances (i,k) alt; 
-		      print_string "coucou";
-		      Hashtbl.add previous k x
-		    end;
-		      if (not(traversedEdge x k)) then
-			get_path previous i k
-		      else
-		    aux2 fin
-	      in aux2 (get_adjo x)
-  in aux adj_out;;
+	      let rec aux2 future = function
+		| [] -> aux future
+		| k::fin -> let alt = distix +. get_cost x k in
+			    if (get_distance i k distances) > alt && (alt < tmax) then
+			      begin
+				print_string ("the distance from "^(soi x)^" to "^(soi k)^" has  been improved\n");
+				Hashtbl.add distances (i,k) alt;
+				Hashtbl.add previous k x;
+				if (not(traversedEdge x k)) then (* we're done: we have found an unvisited edge *) 
+				  get_path previous i k
+				else (* we need to keep looking *)
+				  aux2 (k::future) fin
+			      end
+			    else 
+			      begin
+				print_string ("the distance from "^(soi x)^" to "^(soi k)^" has not been improved\n");
+				aux2 future fin
+			      end
+	      in aux2 newList (get_adjo x)
+  in let (path,edges) = aux [i]
+     in (path,(0.0,0.0,edges));;
 
-(* dijkstra 4516 10.0;; *)
+let dijkstra i depth tmax =
+  dijkstra i tmax;;
+
+
+(* dijkstra 4516 (-1) 20.0;; *)
+
 
 		
-(* let main() = *)
-(*   let nargs = Array.length Sys.argv in *)
-(*   let suffix = ref "" in *)
-(*   let def_depth = 3 in *)
-(*   init(); *)
-(*   let res =  *)
-(*     if nargs <> 3 then *)
-(*       begin *)
-(* 	suffix := string_of_int def_depth; *)
-(* 	parcours 100.0(\* (float_of_int t0) *\) *)
-(* 	  (fun x -> def_depth) start *)
-(*       end *)
-(*     else *)
-(*       begin *)
-(* 	let depth = ios Sys.argv.(1) in *)
-(* 	max_rep := ios Sys.argv.(2); *)
-(* 	let depthFun t = (\* if t> 40000. then 10 else *\) depth in *)
-(* 	parcours (float_of_int t0) depthFun start *)
-(*       end *)
-(*   in *)
-(*   print_float (eval_sol()); print_newline(); *)
-(*   writeSolToFile(Array.to_list res) ("output"^(!suffix)); *)
-(*   res *)
-(* ;; *)
+let main() =
+  let nargs = Array.length Sys.argv in
+  let suffix = ref "" in
+  let def_depth = 3 in
+  init();
+  let res =
+    if nargs <> 4 then
+      begin
+	suffix := string_of_int def_depth;
+	parcours (float_of_int t0)
+	  (fun x -> def_depth) start localSearch
+      end
+    else
+      begin
+	let depth = ios Sys.argv.(1) in
+	max_rep := ios Sys.argv.(2);
+	let dijk = bool_of_string (Sys.argv.(3)) in
+	let localSearch = if dijk then dijkstra else localSearch in
+	let depthFun t = (* if t> 40000. then 10 else *) depth in
+	parcours (float_of_int t0) depthFun  start localSearch
+      end
+  in
+  print_float (eval_sol()); print_newline();
+  writeSolToFile(Array.to_list res) ("output"^(!suffix));
+  res
+;;
 
-(* let res = main();; *)
+let res = main();;
